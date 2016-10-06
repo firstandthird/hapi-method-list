@@ -24,11 +24,29 @@ lab.experiment('hapi-method-loader', () => {
     server.connection({ port: 3000 });
     done();
   });
-  lab.test(' loads as a plugin with default options, lists the methods registered with the server', (done) => {
+  lab.test(' loads as a plugin with default options, lists the methods registered with the server as an HTML table', (done) => {
     server.register({
       register: methodLister,
       options: {
-        verbose: true
+        verbose: true,
+      },
+    }, () => {
+      const expectedOutput = `<table><tr><td><b>topFunction_2Params </b></td> <td>param1 </td><td>param2 </td> </tr><tr><td><b>nestedFunctions.nestedFunction_1Params </b></td> <td>param1 </td> </tr><tr><td><b>nestedFunctions.nestedFunction_0Params </b></td>  </tr><tr><td><b>nestedFunctions.nestedFunctions2.nestedFunction2_3Params </b></td> <td>param1 </td><td>param2 </td><td>param3 </td> </tr></table>`;
+      server.start(() => {
+        // call the route
+        server.inject('/api/listMethods', (response) => {
+          console.log(response.result)
+          code.expect(response.result).to.equal(expectedOutput);
+          done();
+        });
+      });
+    });
+  });
+  lab.test(' loads as a plugin with default options, lists the methods registered with the server as json', (done) => {
+    server.register({
+      register: methodLister,
+      options: {
+        verbose: true,
       },
     }, () => {
       const expectedOutput = [{ name: 'topFunction_2Params', params: [ 'param1', 'param2' ] },
@@ -39,7 +57,7 @@ lab.experiment('hapi-method-loader', () => {
       ];
       server.start(() => {
         // call the route
-        server.inject('/api/listMethods', (response) => {
+        server.inject('/api/listMethods?asJSON=1', (response) => {
           code.expect(response.result).to.deep.equal(expectedOutput);
           done();
         });
@@ -62,7 +80,7 @@ lab.experiment('hapi-method-loader', () => {
       ];
       server.start(() => {
         // call the route
-        server.inject('/sixtysix', (response) => {
+        server.inject('/sixtysix?asJSON=true', (response) => {
           code.expect(response.result).to.deep.equal(expectedOutput);
           done();
         });

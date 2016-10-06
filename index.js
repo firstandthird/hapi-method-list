@@ -12,6 +12,17 @@ const defaults = {
 exports.register = (server, options, next) => {
   options = defaultMethod(options, defaults);
 
+  const getParamHtml = (params) => {
+    return params.reduce((memo, param) => {
+      memo += `<td>${param} </td>`;
+      return memo;
+    }, '');
+  };
+
+  const getMethodHtml = (methodName, method) => {
+    return `<tr><td><b>${methodName} </b></td> ${ getParamHtml(getParams(method))} </tr>`;
+  };
+
   const getMethodInfo = (methodName, method) => {
     return {
       name: methodName,
@@ -19,14 +30,23 @@ exports.register = (server, options, next) => {
     };
   };
 
-  const generateMethodTable = (serverMethods) => {
+  const generateMethodTable = (serverMethods, asJSON) => {
+    // return a JSON object:
+    if (asJSON) {
+      return traverse(serverMethods).reduce(function(acc, val) {
+        if (this.isLeaf) {
+          acc.push(getMethodInfo(this.path.length === 1 ? this.path[0] : this.path.join('.'), val));
+        }
+        return acc;
+      }, []);
+    }
+    // return an HTML table:
     return traverse(serverMethods).reduce(function(acc, val) {
       if (this.isLeaf) {
-        const pathString = this.path.length === 1 ? this.path[0] : this.path.join('.');
-        acc.push(getMethodInfo(pathString, val));
+        acc += getMethodHtml(this.path.length === 1 ? this.path[0] : this.path.join('.'), val);
       }
-      return acc;
-    }, []);
+      return acc.replace('\n', '');
+    }, '<table>') + '</table>';
   };
 
   server.route({
@@ -36,7 +56,7 @@ exports.register = (server, options, next) => {
     },
     method: 'GET',
     handler: (request, reply) => {
-      reply(generateMethodTable(request.server.methods));
+      reply(generateMethodTable(request.server.methods, request.query.asJSON));
     }
   });
   next();

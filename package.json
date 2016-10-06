@@ -4,7 +4,7 @@
   "description": "Plugin to list the methods registered with a hapi server",
   "main": "index.js",
   "scripts": {
-    "test": "lab -t 90",
+    "test": "lab --leaks",
     "lint": "eslint **/*.js"
   },
   "keywords": [
