@@ -10,7 +10,7 @@ const defaults = {
 };
 
 exports.register = (server, options, next) => {
-  options = defaultMethod(defaults, options);
+  options = defaultMethod(options, defaults);
 
   const getMethodInfo = (methodName, method) => {
     return {

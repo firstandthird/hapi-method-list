@@ -13,42 +13,95 @@ lab.experiment('hapi-method-loader', () => {
         log: ['error', 'hapi-method-loader']
       }
     });
+    server.methods.topFunction_2Params = (param1, param2) => {};
+    server.methods.nestedFunctions = {
+      nestedFunction_1Params: function(param1) {},
+      nestedFunction_0Params: () => {},
+      nestedFunctions2: {
+        nestedFunction2_3Params: (param1, param2, param3) => {}
+      }
+    };
     server.connection({ port: 3000 });
+    done();
+  });
+  lab.test(' loads as a plugin with default options, lists the methods registered with the server', (done) => {
     server.register({
       register: methodLister,
       options: {
         verbose: true
       },
-    }, (err) => {
-      if (err) {
-        console.log(err);
-        return;
-      }
-      server.methods.topFunction_2Params = (param1, param2) => {};
-      server.methods.nestedFunctions = {
-        nestedFunction_1Params: function(param1) {},
-        nestedFunction_0Params: () => {},
-        nestedFunctions2: {
-          nestedFunction2_3Params: (param1, param2, param3) => {}
-        }
-      };
-      done();
+    }, () => {
+      const expectedOutput = [{ name: 'topFunction_2Params', params: [ 'param1', 'param2' ] },
+        { name: 'nestedFunctions.nestedFunction_1Params', params: ['param1'] },
+        { name: 'nestedFunctions.nestedFunction_0Params', params: [] },
+        { name: 'nestedFunctions.nestedFunctions2.nestedFunction2_3Params',
+          params: ['param1', 'param2', 'param3'] }
+      ];
+      server.start(() => {
+        // call the route
+        server.inject('/api/listMethods', (response) => {
+          code.expect(response.result).to.deep.equal(expectedOutput);
+          done();
+        });
+      });
     });
   });
-  lab.test(' loads as a plugin, lists the methods registered with the server', (done) => {
-    const expectedOutput = [{ name: 'topFunction_2Params', params: [ 'param1', 'param2' ] },
-      { name: 'nestedFunctions.nestedFunction_1Params', params: ['param1'] },
-      { name: 'nestedFunctions.nestedFunction_0Params', params: [] },
-      { name: 'nestedFunctions.nestedFunctions2.nestedFunction2_3Params',
-        params: ['param1', 'param2', 'param3'] }
-    ];
-    server.start(() => {
-      // call the route
-      server.inject('/api/listMethods', (response) => {
-        code.expect(response.result).to.deep.equal(expectedOutput);
-          // use deepequal here
+  lab.test(' loads as a plugin with custom options, lists the methods registered with the server', (done) => {
+    server.register({
+      register: methodLister,
+      options: {
+        verbose: true,
+        route: '/sixtysix'
+      },
+    }, () => {
+      const expectedOutput = [{ name: 'topFunction_2Params', params: [ 'param1', 'param2' ] },
+        { name: 'nestedFunctions.nestedFunction_1Params', params: ['param1'] },
+        { name: 'nestedFunctions.nestedFunction_0Params', params: [] },
+        { name: 'nestedFunctions.nestedFunctions2.nestedFunction2_3Params',
+          params: ['param1', 'param2', 'param3'] }
+      ];
+      server.start(() => {
+        // call the route
+        server.inject('/sixtysix', (response) => {
+          code.expect(response.result).to.deep.equal(expectedOutput);
           done();
-      })
+        });
+      });
+    });
+  });
+  lab.test(' prevents access if auth is configured to do so', (done) => {
+    server.auth.scheme('custom', () => {
+      return {
+        authenticate: (request, reply) => {
+          return reply(null, 'hi there!', {
+            credentials: '',
+            artifacts: {}
+          });
+        }
+      };
+    });
+    server.auth.strategy('default', 'custom');
+    server.register({
+      register: methodLister,
+      options: {
+        verbose: true,
+        route: '/sixtysix',
+        auth: 'default'
+      },
+    }, () => {
+      const expectedOutput = [{ name: 'topFunction_2Params', params: ['param1', 'param2'] },
+        { name: 'nestedFunctions.nestedFunction_1Params', params: ['param1'] },
+        { name: 'nestedFunctions.nestedFunction_0Params', params: [] },
+        { name: 'nestedFunctions.nestedFunctions2.nestedFunction2_3Params',
+          params: ['param1', 'param2', 'param3'] }
+      ];
+      server.start(() => {
+        // call the route
+        server.inject('/sixtysix', (response) => {
+          code.expect(response.result).to.equal('hi there!');
+          done();
+        });
+      });
     });
   });
 });
