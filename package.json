@@ -1,0 +1,29 @@
+{
+  "name": "hapi-method-list",
+  "version": "1.0.0",
+  "description": "Plugin to list the methods registered with a hapi server",
+  "main": "index.js",
+  "scripts": {
+    "test": "lab -t 90",
+    "lint": "eslint **/*.js"
+  },
+  "keywords": [
+    "hapi",
+    "methods"
+  ],
+  "author": "First+Third",
+  "license": "MIT",
+  "dependencies": {
+    "get-parameter-names": "^0.3.0",
+    "lodash.defaults": "^4.2.0",
+    "traverse": "^0.6.6"
+  },
+  "devDependencies": {
+    "code": "^2.1.0",
+    "eslint": "^3.4.0",
+    "eslint-config-firstandthird": "^3.0.2",
+    "eslint-plugin-import": "^1.14.0",
+    "hapi": "^10.1.0",
+    "lab": "^8.0.2"
+  }
+}
