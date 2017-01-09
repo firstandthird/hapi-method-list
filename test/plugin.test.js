@@ -58,7 +58,7 @@ lab.experiment('hapi-method-loader', () => {
       server.start(() => {
         // call the route
         server.inject('/api/listMethods?asJSON=1', (response) => {
-          code.expect(response.result).to.deep.equal(expectedOutput);
+          code.expect(response.result).to.equal(expectedOutput);
           done();
         });
       });
@@ -81,7 +81,7 @@ lab.experiment('hapi-method-loader', () => {
       server.start(() => {
         // call the route
         server.inject('/sixtysix?asJSON=true', (response) => {
-          code.expect(response.result).to.deep.equal(expectedOutput);
+          code.expect(response.result).to.equal(expectedOutput);
           done();
         });
       });
